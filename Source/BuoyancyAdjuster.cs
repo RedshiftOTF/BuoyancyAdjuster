@@ -1,4 +1,4 @@
-﻿using KSP;
+using KSP;
 using KSP.UI.Screens;
 using UnityEngine;
 
@@ -413,12 +413,20 @@ public class BuoyancyAdjuster : MonoBehaviour
     }
 
     /// <summary>
-    /// Nothing to restore — KSP resets p.buoyancy from part config every frame
-    /// so our writes don't persist. When the mod is disabled the counterforce
-    /// simply stops being applied and KSP's natural buoyancy resumes.
+    /// Restores p.buoyancy on all parts of the tracked vessel to their prefab
+    /// values so KSP's natural buoyancy resumes when the mod is disabled.
     /// </summary>
     void RestoreBuoyancy()
     {
-        // intentionally empty
+        Vessel v = trackedVessel;
+        if (v == null || v.parts == null) return;
+
+        foreach (Part p in v.parts)
+        {
+            if (p == null) continue;
+            Part prefab = p.partInfo?.partPrefab;
+            p.buoyancy = prefab != null ? prefab.buoyancy : 1f;
+            p.submergedPortion = 0f;
+        }
     }
 }
