@@ -1,0 +1,43 @@
+# BuoyancyAdjuster Localisation File
+# Replace the values after the first = sign with your translation
+# Do not change the keys (the text before the =)
+# Lines beginning with # are comments and are ignored
+
+# Window title
+window_title = Buoyancy Adjuster v1.1
+
+# Off / On buttons
+button_off = Off
+button_on = On
+
+# Buoyancy level controls
+button_apply = Apply
+button_reset = 100%
+label_current = Current:
+
+# Increment / decrement labels
+label_5percent = 5%
+label_1percent = 1%
+label_0_1percent = 0.1%
+
+# Info labels
+label_max_rise = 200% = Max rise
+label_neutral = 100% = Neutral buoyancy
+label_full_sink = 0% = Full sink
+
+# Vertical speed
+label_speed_up = Vertical Speed:  ↑ {0} m/s
+label_speed_down = Vertical Speed:  ↓ {0} m/s
+
+# Settings & Extras
+label_settings = Settings & Extras
+
+# Water thrusters
+label_rcs_thrusters = RCS Thrusters
+label_become_water = become Water Thrusters
+
+# Decoupled / undocked parts
+label_decoupled_header = Decoupled / Undocked parts:
+label_neutrally_buoyant = Are neutrally buoyant
+label_stock_buoyancy = Return to stock buoyancy
+label_zero_buoyancy = Have zero buoyancy
