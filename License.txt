@@ -1,4 +1,4 @@
-BuoyancyAdjuster v1.0
+BuoyancyAdjuster v1.1
 
 Copyright (c) 2026 
 
