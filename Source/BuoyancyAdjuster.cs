@@ -7,19 +7,19 @@ using Debug = UnityEngine.Debug;
 public class BuoyancyAdjuster : MonoBehaviour
 {
     // ── State ────────────────────────────────────────────────────────────────
-    private bool modEnabled = false;
-    private bool modEnabledPending = false;
+    private bool modEnabled          = false;
+    private bool modEnabledPending   = false;
     private bool modEnabledPendingSet = false;
-    private bool windowOpen = false;
-    private Vessel trackedVessel = null;
+    private bool windowOpen          = false;
+    private Vessel trackedVessel     = null;
 
-    private float buoyancyLevel = 1.0f;
+    private float buoyancyLevel      = 1.0f;
     private string buoyancyLevelInput = "100";
 
-    private bool showSettings = false;
+    private bool showSettings        = false;
 
     // ── Water thrusters ───────────────────────────────────────────────────────
-    private bool waterThrusters = false;
+    private bool waterThrusters          = false;
     private bool waterThrustersInitialised = false;
 
     // ── Decoupled / undocked parts behaviour ──────────────────────────────────
@@ -38,9 +38,9 @@ public class BuoyancyAdjuster : MonoBehaviour
     // ── Lifecycle ─────────────────────────────────────────────────────────────
     void LoadLocalisation()
     {
-        const string path =
-            @"C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program" +
-            @"\GameData\BuoyancyAdjuster\Localisation\Localisation.txt";
+        string path = System.IO.Path.Combine(
+            KSPUtil.ApplicationRootPath,
+            "GameData/BuoyancyAdjuster/Localisation/Localisation.txt");
         try
         {
             if (!System.IO.File.Exists(path)) return;
@@ -49,7 +49,7 @@ public class BuoyancyAdjuster : MonoBehaviour
                 if (string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("#")) continue;
                 int idx = line.IndexOf('=');
                 if (idx < 0) continue;
-                string key = line.Substring(0, idx).Trim();
+                string key   = line.Substring(0, idx).Trim();
                 string value = line.Substring(idx + 1).Trim();
                 loc[key] = value;
             }
@@ -118,8 +118,8 @@ public class BuoyancyAdjuster : MonoBehaviour
         // Apply pending mod state change from GUI
         if (modEnabledPendingSet)
         {
-            modEnabled = modEnabledPending;
-            modEnabledPendingSet = false;
+            modEnabled            = modEnabledPending;
+            modEnabledPendingSet  = false;
 
             if (modEnabled)
             {
@@ -186,12 +186,12 @@ public class BuoyancyAdjuster : MonoBehaviour
         GUILayout.BeginHorizontal();
         if (GUILayout.Button(!modEnabled ? $"● {L("button_off")}" : $"○ {L("button_off")}", GUILayout.Width(80)))
         {
-            modEnabledPending = false;
+            modEnabledPending    = false;
             modEnabledPendingSet = true;
         }
         if (GUILayout.Button(modEnabled ? $"● {L("button_on")}" : $"○ {L("button_on")}", GUILayout.Width(80)))
         {
-            modEnabledPending = true;
+            modEnabledPending    = true;
             modEnabledPendingSet = true;
         }
         GUILayout.EndHorizontal();
@@ -261,7 +261,7 @@ public class BuoyancyAdjuster : MonoBehaviour
         {
             double vs = activeVessel.verticalSpeed;
             GUILayout.Label(vs >= 0f
-                ? string.Format(L("label_speed_up"), $"{vs:F2}")
+                ? string.Format(L("label_speed_up"),   $"{vs:F2}")
                 : string.Format(L("label_speed_down"), $"{-vs:F2}"));
         }
 
@@ -294,11 +294,11 @@ public class BuoyancyAdjuster : MonoBehaviour
             GUILayout.Space(8);
 
             GUILayout.Label(L("label_decoupled_header"));
-            if (GUILayout.Toggle(decoupledPartsMode == DecoupledPartsMode.Parked, L("label_neutrally_buoyant")))
+            if (GUILayout.Toggle(decoupledPartsMode == DecoupledPartsMode.Parked,        L("label_neutrally_buoyant")))
                 decoupledPartsMode = DecoupledPartsMode.Parked;
             if (GUILayout.Toggle(decoupledPartsMode == DecoupledPartsMode.StockBuoyancy, L("label_stock_buoyancy")))
                 decoupledPartsMode = DecoupledPartsMode.StockBuoyancy;
-            if (GUILayout.Toggle(decoupledPartsMode == DecoupledPartsMode.ZeroBuoyancy, L("label_zero_buoyancy")))
+            if (GUILayout.Toggle(decoupledPartsMode == DecoupledPartsMode.ZeroBuoyancy,  L("label_zero_buoyancy")))
                 decoupledPartsMode = DecoupledPartsMode.ZeroBuoyancy;
         }
 
@@ -320,12 +320,12 @@ public class BuoyancyAdjuster : MonoBehaviour
     {
         if (v == null || v.parts == null || !v.loaded) return;
 
-        Vector3 up = (v.transform.position - v.mainBody.position).normalized;
-        float gravity = (float)v.graviticAcceleration.magnitude;
-        int count = v.parts.Count;
-        float totalMass = v.GetTotalMass();
+        Vector3 up         = (v.transform.position - v.mainBody.position).normalized;
+        float gravity      = (float)v.graviticAcceleration.magnitude;
+        int   count        = v.parts.Count;
+        float totalMass    = v.GetTotalMass();
         if (totalMass <= 0f) return;
-        float totalMassKg = totalMass * 1000f;
+        float totalMassKg  = totalMass * 1000f;
         float vesselWeight = totalMassKg * gravity;
 
         // Build cargo bay lookup
@@ -370,7 +370,7 @@ public class BuoyancyAdjuster : MonoBehaviour
         {
             Part p = v.parts[i];
             if (p == null) continue;
-            p.buoyancy = 0f;
+            p.buoyancy         = 0f;
             p.submergedPortion = 0f;
         }
 
@@ -380,7 +380,7 @@ public class BuoyancyAdjuster : MonoBehaviour
             Part p = v.parts[i];
             if (p == null || p.rb == null || subPorArr[i] <= 0f) continue;
             float partMassKg = (p.mass + p.GetResourceMass()) * 1000f + GetPhysicslessChildMass(p) * 1000f;
-            float fNew = vesselWeight * (partMassKg / totalMassKg) * subPorArr[i] * level;
+            float fNew       = vesselWeight * (partMassKg / totalMassKg) * subPorArr[i] * level;
             p.rb.AddForceAtPosition(up * fNew / 1000f, p.rb.worldCenterOfMass, ForceMode.Force);
         }
     }
@@ -402,8 +402,8 @@ public class BuoyancyAdjuster : MonoBehaviour
         foreach (Part p in v.parts)
         {
             if (p == null) continue;
-            Part prefab = p.partInfo?.partPrefab;
-            p.buoyancy = prefab != null ? prefab.buoyancy : 1f;
+            Part prefab    = p.partInfo?.partPrefab;
+            p.buoyancy     = prefab != null ? prefab.buoyancy : 1f;
             p.submergedPortion = 0f;
         }
     }
@@ -417,14 +417,14 @@ public class BuoyancyAdjuster : MonoBehaviour
         if (!root.Resources.Contains(name))
         {
             ConfigNode node = new ConfigNode("RESOURCE");
-            node.AddValue("name", name);
-            node.AddValue("amount", amount.ToString("F4"));
+            node.AddValue("name",      name);
+            node.AddValue("amount",    amount.ToString("F4"));
             node.AddValue("maxAmount", maxAmount.ToString("F4"));
             root.Resources.Add(node);
         }
         else
         {
-            root.Resources[name].amount = amount;
+            root.Resources[name].amount    = amount;
             root.Resources[name].maxAmount = maxAmount;
         }
     }
@@ -444,12 +444,12 @@ public class BuoyancyAdjuster : MonoBehaviour
                 root.Resources.Remove(root.Resources[name]);
     }
 
-    void SetModFlag(Vessel v, bool on) => SetResourceFlag(v, "BuoyancyAdjusterState", on ? 1.0 : 0.0);
-    bool GetModFlag(Vessel v) => GetResourceValue(v, "BuoyancyAdjusterState") >= 0.5;
-    void SetWaterThrustersFlag(Vessel v, bool on) => SetResourceFlag(v, "WaterThrustersState", on ? 1.0 : 0.0);
-    bool GetWaterThrustersFlag(Vessel v) => GetResourceValue(v, "WaterThrustersState") >= 0.5;
-    void SaveBuoyancyLevel(Vessel v, float level) => SetResourceFlag(v, "BuoyancyLevel", level, 2.0);
-    float GetBuoyancyLevel(Vessel v) => (float)GetResourceValue(v, "BuoyancyLevel", 1.0);
+    void   SetModFlag(Vessel v, bool on)    => SetResourceFlag(v, "BuoyancyAdjusterState", on ? 1.0 : 0.0);
+    bool   GetModFlag(Vessel v)             => GetResourceValue(v, "BuoyancyAdjusterState") >= 0.5;
+    void   SetWaterThrustersFlag(Vessel v, bool on) => SetResourceFlag(v, "WaterThrustersState", on ? 1.0 : 0.0);
+    bool   GetWaterThrustersFlag(Vessel v)  => GetResourceValue(v, "WaterThrustersState") >= 0.5;
+    void   SaveBuoyancyLevel(Vessel v, float level) => SetResourceFlag(v, "BuoyancyLevel", level, 2.0);
+    float  GetBuoyancyLevel(Vessel v)       => (float)GetResourceValue(v, "BuoyancyLevel", 1.0);
 
     // ── Water thrusters ───────────────────────────────────────────────────────
 
@@ -458,7 +458,7 @@ public class BuoyancyAdjuster : MonoBehaviour
         Vessel v = trackedVessel;
         if (v == null || v.parts == null) yield break;
 
-        var partList = new System.Collections.Generic.List<Part>(v.parts);
+        var partList  = new System.Collections.Generic.List<Part>(v.parts);
         int batchSize = 5;
 
         for (int i = 0; i < partList.Count; i += batchSize)
@@ -505,13 +505,13 @@ public class BuoyancyAdjuster : MonoBehaviour
                 {
                     ModuleRCS prefabRcs = prefab.Modules.GetModule<ModuleRCS>();
                     if (prefabRcs == null) continue;
-                    rcs.thrusterPower = prefabRcs.thrusterPower;
+                    rcs.thrusterPower   = prefabRcs.thrusterPower;
                     rcs.atmosphereCurve = prefabRcs.atmosphereCurve;
                     rcs.propellants.Clear();
                     foreach (Propellant prop in prefabRcs.propellants)
                     {
                         ConfigNode node = new ConfigNode("PROPELLANT");
-                        node.AddValue("name", prop.name);
+                        node.AddValue("name",  prop.name);
                         node.AddValue("ratio", prop.ratio.ToString("F6"));
                         Propellant np = new Propellant();
                         np.Load(node);
@@ -523,13 +523,13 @@ public class BuoyancyAdjuster : MonoBehaviour
                 {
                     ModuleEnginesFX prefabEng = prefab.Modules.GetModule<ModuleEnginesFX>();
                     if (prefabEng == null) continue;
-                    eng.maxThrust = prefabEng.maxThrust;
+                    eng.maxThrust       = prefabEng.maxThrust;
                     eng.atmosphereCurve = prefabEng.atmosphereCurve;
                     eng.propellants.Clear();
                     foreach (Propellant prop in prefabEng.propellants)
                     {
                         ConfigNode node = new ConfigNode("PROPELLANT");
-                        node.AddValue("name", prop.name);
+                        node.AddValue("name",  prop.name);
                         node.AddValue("ratio", prop.ratio.ToString("F6"));
                         Propellant np = new Propellant();
                         np.Load(node);
@@ -576,8 +576,8 @@ public class BuoyancyAdjuster : MonoBehaviour
                 if (!p.Resources.Contains("BuoyancyWater"))
                 {
                     ConfigNode node = new ConfigNode("RESOURCE");
-                    node.AddValue("name", "BuoyancyWater");
-                    node.AddValue("amount", "1");
+                    node.AddValue("name",      "BuoyancyWater");
+                    node.AddValue("amount",    "1");
                     node.AddValue("maxAmount", "1");
                     p.Resources.Add(node);
                 }
@@ -591,9 +591,9 @@ public class BuoyancyAdjuster : MonoBehaviour
     {
         propellants.Clear();
         ConfigNode node = new ConfigNode("PROPELLANT");
-        node.AddValue("name", "BuoyancyWater");
-        node.AddValue("ratio", "0.000001");
-        node.AddValue("DrawGauge", "false");
+        node.AddValue("name",             "BuoyancyWater");
+        node.AddValue("ratio",            "0.000001");
+        node.AddValue("DrawGauge",        "false");
         node.AddValue("resourceFlowMode", "NO_FLOW");
         Propellant p = new Propellant();
         p.Load(node);
@@ -603,9 +603,9 @@ public class BuoyancyAdjuster : MonoBehaviour
     FloatCurve FlatIspCurve()
     {
         FloatCurve curve = new FloatCurve();
-        curve.Add(0f, 1000f);
-        curve.Add(1f, 1000f);
-        curve.Add(100f, 1000f);
+        curve.Add(0f,    1000f);
+        curve.Add(1f,    1000f);
+        curve.Add(100f,  1000f);
         curve.Add(1000f, 1000f);
         return curve;
     }
@@ -623,18 +623,18 @@ public class BuoyancyAdjuster : MonoBehaviour
         }
 
         waterThrustersInitialised = false;
-        trackedVessel = newVessel;
-        modEnabled = false;
-        modEnabledPending = false;
+        trackedVessel        = newVessel;
+        modEnabled           = false;
+        modEnabledPending    = false;
         modEnabledPendingSet = false;
-        waterThrusters = false;
+        waterThrusters       = false;
 
         if (newVessel == null || newVessel.parts == null) return;
 
         if (GetModFlag(newVessel))
         {
-            modEnabled = true;
-            buoyancyLevel = GetBuoyancyLevel(newVessel);
+            modEnabled         = true;
+            buoyancyLevel      = GetBuoyancyLevel(newVessel);
             buoyancyLevelInput = (buoyancyLevel * 100f).ToString("F1");
         }
 
@@ -701,15 +701,15 @@ public class BuoyancyAdjuster : MonoBehaviour
         Vessel v = trackedVessel ?? FlightGlobals.ActiveVessel;
         if (v == null || v.parts == null) yield break;
 
-        bool anyMod = GetModFlag(v);
-        bool anyWaterThrusters = GetWaterThrustersFlag(v);
-        float highestBuoyancy = GetBuoyancyLevel(v);
+        bool  anyMod            = GetModFlag(v);
+        bool  anyWaterThrusters = GetWaterThrustersFlag(v);
+        float highestBuoyancy   = GetBuoyancyLevel(v);
 
         foreach (Part p in v.parts)
         {
             if (p == null || p == v.rootPart) continue;
             if (p.Resources.Contains("BuoyancyAdjusterState") && p.Resources["BuoyancyAdjusterState"].amount >= 0.5) anyMod = true;
-            if (p.Resources.Contains("WaterThrustersState") && p.Resources["WaterThrustersState"].amount >= 0.5) anyWaterThrusters = true;
+            if (p.Resources.Contains("WaterThrustersState")   && p.Resources["WaterThrustersState"].amount   >= 0.5) anyWaterThrusters = true;
             if (p.Resources.Contains("BuoyancyLevel"))
             {
                 float level = (float)p.Resources["BuoyancyLevel"].amount;
@@ -725,20 +725,20 @@ public class BuoyancyAdjuster : MonoBehaviour
         {
             if (anyMod && !modEnabled)
             {
-                modEnabled = true;
-                buoyancyLevel = highestBuoyancy;
+                modEnabled         = true;
+                buoyancyLevel      = highestBuoyancy;
                 buoyancyLevelInput = (buoyancyLevel * 100f).ToString("F1");
             }
             if (anyWaterThrusters)
             {
-                waterThrusters = true;
+                waterThrusters            = true;
                 waterThrustersInitialised = false;
             }
         }
     }
 
     void OnGameStateLoad(ConfigNode node) { StartCoroutine(ReapplyStateAfterLoad()); }
-    void OnFlightReady() { StartCoroutine(ReapplyStateAfterLoad()); }
+    void OnFlightReady()                  { StartCoroutine(ReapplyStateAfterLoad()); }
 
     System.Collections.IEnumerator ReapplyStateAfterLoad()
     {
@@ -747,16 +747,16 @@ public class BuoyancyAdjuster : MonoBehaviour
         Vessel v = FlightGlobals.ActiveVessel;
         if (v == null) yield break;
 
-        trackedVessel = v;
-        modEnabled = false;
-        modEnabledPending = false;
+        trackedVessel        = v;
+        modEnabled           = false;
+        modEnabledPending    = false;
         modEnabledPendingSet = false;
-        waterThrusters = false;
+        waterThrusters       = false;
 
         if (GetModFlag(v))
         {
-            modEnabled = true;
-            buoyancyLevel = GetBuoyancyLevel(v);
+            modEnabled         = true;
+            buoyancyLevel      = GetBuoyancyLevel(v);
             buoyancyLevelInput = (buoyancyLevel * 100f).ToString("F1");
         }
 
